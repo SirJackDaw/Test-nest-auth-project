@@ -64,6 +64,7 @@ export class UserController {
 
   @Put('api/editRole/:id')
   @HttpCode(200)
+  @ApiResponse({status: 200, description: 'Successfully updated'})
   @ApiQuery({type: String, name: 'role'})
   async editUserRole(@Param('id', IdValidationPipe) id: string, @Query('role') role: UserRole): Promise<UserModel> {
     return this.userService.updateRole(id, role);
