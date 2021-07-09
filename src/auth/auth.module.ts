@@ -1,4 +1,5 @@
-  
+import { RefreshService } from './refreshToken/refresh.service';
+import { RefreshModule } from './refreshToken/refresh.module';
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule} from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -16,7 +17,7 @@ import { RolesGuard } from './guards/roles.guard';
             imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: getJWTConfig
-        })
+        }),
     ],
     providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
     exports: [AuthService]
