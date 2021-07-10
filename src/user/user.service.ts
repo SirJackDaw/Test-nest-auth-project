@@ -69,8 +69,7 @@ export class UserService {
   }
 
   async getToken(user: UserModel) {
-    return {
-      access_token: await this.authService.generateJWT(user)
-    }
+    const tokens = await this.authService.generateJWT(user)
+    return tokens
   }
 }
