@@ -33,6 +33,12 @@ export class UserController {
     return this.userService.getToken(user);
   }
 
+  @Post('api/refresh')
+  @HttpCode(200)
+  async refresh(@Body() token: string): Promise<any> {
+    return this.userService.refresh(token)
+  }
+
   @Get('api/users/:id')
   @HttpCode(200)
   async getUser(@Param('id', IdValidationPipe) id: string): Promise<UserModel> {

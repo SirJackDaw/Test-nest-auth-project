@@ -72,4 +72,11 @@ export class UserService {
     const tokens = await this.authService.generateJWT(user)
     return tokens
   }
+
+  async refresh(token:string)
+  {
+    const data = await this.authService.verifyToken(token)
+    return this.getToken(data)
+  }
+
 }
