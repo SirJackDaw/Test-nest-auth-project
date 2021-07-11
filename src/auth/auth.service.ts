@@ -26,7 +26,7 @@ export class AuthService {
     }
 
     async generateRefresh(user: UserModel): Promise<RefreshModel> {
-        const token = await this.jwtService.signAsync({user}, {expiresIn: '1h'});
+        const token = await this.jwtService.signAsync({user}, {expiresIn: '10s'});
         return this.saveToken(user._id, token);
     }
 
@@ -44,10 +44,10 @@ export class AuthService {
         try {
             data = await this.jwtService.verify(token);
         } catch (e) {
+            if (e.message == 'jwt expired') {
+                throw new UnauthorizedException()
+            }
             throw new BadRequestException()
-        }
-        if (Date.now() >= data.exp * 1000) {
-            throw new UnauthorizedException()
         }
         const tokenExist = await this.tokenExist(data.user._id, token)
         if (!tokenExist) {
