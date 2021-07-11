@@ -35,8 +35,8 @@ export class UserController {
 
   @Post('api/refresh')
   @HttpCode(200)
-  async refresh(@Body() token: string): Promise<any> {
-    return this.userService.refresh(token)
+  async refresh(@Query('token') token: string) {
+    return this.userService.refresh(token);
   }
 
   @Get('api/users/:id')

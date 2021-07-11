@@ -1,11 +1,12 @@
 import { Types } from 'mongoose';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hash, compare } from 'bcryptjs';
 import { UserModel } from 'src/user/user.model';
 import { RefreshModel } from './refreshToken/refresh.model';
 import { InjectModel } from 'nestjs-typegoose';
 import { ModelType } from '@typegoose/typegoose/lib/types';
+import { combineLatest } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -40,8 +41,14 @@ export class AuthService {
     }
 
     async verifyToken(token): Promise<UserModel> {
-        const data = this.jwtService.verify(token);
+        let data;
+        try {
+            data = await this.jwtService.verify(token);
+        } catch (e) {
+            throw new BadRequestException()
+        }
         const tokenExist = await this.tokenExist(data._id, token)
+        console.log(data)
         if (!tokenExist) {
             throw new UnauthorizedException()
         }
@@ -49,7 +56,8 @@ export class AuthService {
     }
 
     async tokenExist(userId, token): Promise<boolean>{
-        return this.refreshModel.exists({userId, refreshToken: token})
+        console.log(userId)
+        return this.refreshModel.exists({userId: userId, refreshToken: token})
     }
 
     hashPassword(password: string): Promise<string> {
