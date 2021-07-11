@@ -76,7 +76,6 @@ export class UserService {
   async refresh(token:string)
   {
     const data = await this.authService.verifyToken(token)
-    console.log(data)
     return this.getToken(data)
   }
 

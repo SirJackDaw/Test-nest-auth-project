@@ -47,8 +47,11 @@ export class AuthService {
         } catch (e) {
             throw new BadRequestException()
         }
+        if (Date.now() >= data.exp * 1000) {
+            throw new UnauthorizedException()
+          }
         const tokenExist = await this.tokenExist(data._id, token)
-        console.log(data)
+        console.log(Date.now(), data.exp )
         if (!tokenExist) {
             throw new UnauthorizedException()
         }
