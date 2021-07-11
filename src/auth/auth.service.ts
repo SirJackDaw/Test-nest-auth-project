@@ -57,7 +57,6 @@ export class AuthService {
     }
 
     async tokenExist(userId, token): Promise<boolean>{
-        console.log(userId)
         return this.refreshModel.exists({userId: userId, refreshToken: token})
     }
 

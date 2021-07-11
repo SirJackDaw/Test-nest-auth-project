@@ -7,7 +7,7 @@ export const getJWTConfig = async (): Promise<JwtModuleOptions> => {
         privateKey: keys.privateKey,
         publicKey: keys.publicKey,
         signOptions: {
-            expiresIn: '10000s',
+            expiresIn: '10m',
             algorithm: 'RS256'
         }
     }
