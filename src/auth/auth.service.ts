@@ -26,7 +26,7 @@ export class AuthService {
     }
 
     async generateRefresh(user: UserModel): Promise<RefreshModel> {
-        const token = await this.jwtService.signAsync({user}, {expiresIn: '10s'});
+        const token = await this.jwtService.signAsync({user}, {expiresIn: '1h'});
         return this.saveToken(user._id, token);
     }
 
