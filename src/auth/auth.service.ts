@@ -6,7 +6,6 @@ import { UserModel } from 'src/user/user.model';
 import { RefreshModel } from './refreshToken/refresh.model';
 import { InjectModel } from 'nestjs-typegoose';
 import { ModelType } from '@typegoose/typegoose/lib/types';
-import { combineLatest } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -49,9 +48,8 @@ export class AuthService {
         }
         if (Date.now() >= data.exp * 1000) {
             throw new UnauthorizedException()
-          }
-        const tokenExist = await this.tokenExist(data._id, token)
-        console.log(Date.now(), data.exp )
+        }
+        const tokenExist = await this.tokenExist(data.user._id, token)
         if (!tokenExist) {
             throw new UnauthorizedException()
         }
