@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { TypegooseModule } from 'nestjs-typegoose';
 import { UserController } from './user.controller';
 import { UserModel } from './user.model';
@@ -19,6 +19,6 @@ import { AuthModule } from 'src/auth/auth.module';
     AuthModule
   ],
   controllers: [UserController],
-  providers: [UserService, JwtStrategy],
+  providers: [UserService, JwtStrategy, Logger],
 })
 export class UserModule {}

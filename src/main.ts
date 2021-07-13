@@ -1,14 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: console
+    logger: WinstonModule.createLogger({
+      transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'logger.log' }),
+        new winston.transports.File({ filename: 'http.log', level: 'warn' })
+      ],
+    })
   });
   const config = new DocumentBuilder()
-      .setTitle('Content static service')
-      .setDescription('Content static service API description')
+      .setTitle('Test nest service')
+      .setDescription('Test nest service API description')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

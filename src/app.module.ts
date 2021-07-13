@@ -1,4 +1,4 @@
-import {Module} from '@nestjs/common';
+import {Logger, Module} from '@nestjs/common';
 import {ConfigModule, ConfigService} from "@nestjs/config";
 import {TypegooseModule} from "nestjs-typegoose";
 import {getMongoConfig} from "./config/mongoConfig";
@@ -13,6 +13,7 @@ import { UserModule } from './user/user.module';
             useFactory: getMongoConfig
         }),
         UserModule],
+    providers: [Logger]
 })
 export class AppModule {
 }

@@ -1,5 +1,5 @@
 import { ErrorWithMessage } from './../pdo/ErrorWithMessage';
-import { BadRequestException, Body, Query, Controller, Delete, Get, HttpCode, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Query, Controller, Delete, Get, HttpCode, Param, Post, Put, UseGuards, Logger } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/createUserDto';
@@ -16,7 +16,8 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-guard';
 @Controller()
 @ApiTags('User')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService,
+    private readonly logger: Logger) {}
 
   @hasRoles(UserRole.Admin)
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -29,6 +30,7 @@ export class UserController {
   @Post('api/login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto): Promise<any> {
+    this.logger.error('WINSTON')
     const user = await this.userService.validateUser(dto)
     return this.userService.getToken(user);
   }
