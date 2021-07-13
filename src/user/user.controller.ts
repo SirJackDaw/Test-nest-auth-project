@@ -30,7 +30,7 @@ export class UserController {
   @Post('api/login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto): Promise<any> {
-    this.logger.error('WINSTON')
+    this.logger.log('http','WINSTON')
     const user = await this.userService.validateUser(dto)
     return this.userService.getToken(user);
   }
