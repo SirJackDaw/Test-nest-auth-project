@@ -2,15 +2,15 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
 import { WinstonModule } from 'nest-winston';
-import * as winston from 'winston'
+import {transports} from 'winston'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({
       transports: [
-        new winston.transports.Console(),
-        new winston.transports.File({ filename: 'logger.log' }),
-        new winston.transports.File({ filename: 'http.log', level: 'warn' })
+        new transports.Console(),
+        new transports.File({ filename: 'logger.log' }),
+        new transports.File({ filename: 'http.log', level: 'warn' })
       ],
     })
   });
