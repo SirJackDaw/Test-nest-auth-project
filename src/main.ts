@@ -18,6 +18,7 @@ async function bootstrap() {
       ],
     })
   });
+  // useRequestLogging(app);
   const config = new DocumentBuilder()
       .setTitle('Test nest service')
       .setDescription('Test nest service API description')

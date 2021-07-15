@@ -1,7 +1,8 @@
-import {Logger, Module} from '@nestjs/common';
+import {Logger, MiddlewareConsumer, Module} from '@nestjs/common';
 import {ConfigModule, ConfigService} from "@nestjs/config";
 import {TypegooseModule} from "nestjs-typegoose";
 import {getMongoConfig} from "./config/mongoConfig";
+import { AppLoggerMiddleware } from './middlewares/requestLogger.middleware';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -16,4 +17,6 @@ import { UserModule } from './user/user.module';
     providers: [Logger]
 })
 export class AppModule {
-}
+    configure(consumer: MiddlewareConsumer): void {
+        consumer.apply(AppLoggerMiddleware).forRoutes('*');
+}}
