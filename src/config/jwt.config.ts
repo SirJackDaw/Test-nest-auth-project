@@ -1,5 +1,4 @@
 import { JwtModuleOptions } from "@nestjs/jwt";
-import * as fs from 'fs'
 import { keys } from "./keys";
 
 export const getJWTConfig = async (): Promise<JwtModuleOptions> => {

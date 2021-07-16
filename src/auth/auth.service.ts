@@ -1,45 +1,47 @@
-import { Types } from 'mongoose';
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import { hash, compare } from 'bcryptjs';
-import { UserModel } from 'src/user/user.model';
-import { RefreshModel } from './refreshToken/refresh.model';
-import { InjectModel } from 'nestjs-typegoose';
-import { ModelType } from '@typegoose/typegoose/lib/types';
+import { User } from 'src/user/user.entity';
+import { Repository } from 'typeorm';
+import { RefreshToken } from './refreshToken/refresh.entity';
 
 @Injectable()
 export class AuthService {
 
     constructor(
-        @InjectModel(RefreshModel) private readonly refreshModel: ModelType<RefreshModel>,
+        @InjectRepository(RefreshToken) private readonly refreshRepo: Repository<RefreshToken>,
         private readonly jwtService: JwtService)
     {}
 
 
-    async generateJWT(user: UserModel) {
+    async generateJWT(user: User) {
         const accessToken = await this.jwtService.signAsync({user});
         const refreshToken = await this.generateRefresh(user)
         return {
             access_token: accessToken,
-            refresh_token: refreshToken.refreshToken
+            refresh_token: refreshToken.token
         }
     }
 
-    async generateRefresh(user: UserModel): Promise<RefreshModel> {
+    async generateRefresh(user: User): Promise<RefreshToken> {
         const token = await this.jwtService.signAsync({user}, {expiresIn: '1h'});
-        return this.saveToken(user._id, token);
+        return this.saveToken(user.id, token);
     }
 
-    async saveToken(userId: Types.ObjectId, refreshToken: string): Promise<RefreshModel> {
-        const token = await this.refreshModel.findOne({ userId }).exec()
-        if (token) {
-            token.refreshToken = refreshToken;
-            return token.save();
+    async saveToken(userId: number, refreshToken: string): Promise<RefreshToken> {
+        const oldToken = await this.refreshRepo.findOne({ userId })
+        if (oldToken) {
+            oldToken.token = refreshToken;
+            await this.refreshRepo.save(oldToken)
+            return oldToken;
         }
-        return this.refreshModel.create({userId, refreshToken})
+        const newToken =  this.refreshRepo.create({ userId, token: refreshToken })
+        await this.refreshRepo.save(newToken)
+        return newToken
     }
 
-    async verifyToken(token): Promise<UserModel> {
+    async verifyToken(token): Promise<User> {
         let data;
         try {
             data = await this.jwtService.verify(token);
@@ -49,15 +51,16 @@ export class AuthService {
             }
             throw new BadRequestException()
         }
-        const tokenExist = await this.tokenExist(data.user._id, token)
+        const tokenExist = await this.tokenExist(data.user.id, token)
         if (!tokenExist) {
             throw new UnauthorizedException()
         }
-        return data;
+        return data.user;
     }
 
     async tokenExist(userId, token): Promise<boolean>{
-        return this.refreshModel.exists({userId: userId, refreshToken: token})
+        const oldToken = await this.refreshRepo.findOne({userId, token})
+        return oldToken ? true : false;
     }
 
     hashPassword(password: string): Promise<string> {

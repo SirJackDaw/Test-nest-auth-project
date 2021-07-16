@@ -6,24 +6,17 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { getJWTConfig } from 'src/config/jwt.config';
 import { JwtAuthGuard } from './guards/jwt-guard';
 import { RolesGuard } from './guards/roles.guard';
-import { TypegooseModule } from 'nestjs-typegoose';
-import { RefreshModel } from './refreshToken/refresh.model';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RefreshToken } from './refreshToken/refresh.entity';
 
 @Module({
     imports: [
+      TypeOrmModule.forFeature([RefreshToken]),
         JwtModule.registerAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: getJWTConfig
         }),
-        TypegooseModule.forFeature([
-            {
-              typegooseClass: RefreshModel,
-              schemaOptions: {
-                collection: 'RefreshToken',
-              },
-            },
-          ]),
     ],
     providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
     exports: [AuthService]

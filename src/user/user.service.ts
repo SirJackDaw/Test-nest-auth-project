@@ -1,63 +1,71 @@
 import { UserRole } from './user.roles';
 import { AuthService } from './../auth/auth.service';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { DocumentType, ModelType } from '@typegoose/typegoose/lib/types';
-import { InjectModel } from 'nestjs-typegoose';
-import { Types } from 'mongoose';
-import { UserModel } from './user.model';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/createUserDto';
 import { LoginDto } from './dto/loginDto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './user.entity';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(UserModel) private readonly userModel: ModelType<UserModel>,
+    @InjectRepository(UserRepository) private readonly userRepo: UserRepository,
     private readonly authService: AuthService) {}
 
-  async find(): Promise<DocumentType<UserModel>[]> {
-    return this.userModel.find().exec();
+  async findUsers(condition: any): Promise<User[]> {
+    return this.userRepo.find(condition);
   }
 
-  async findById( id: string | Types.ObjectId): Promise<DocumentType<UserModel>> {
-    return this.userModel.findById(id).exec();
-  }
-
-  async findByEmail(email: string): Promise<DocumentType<UserModel>>{
-    return this.userModel.findOne({ email }).exec();
-  }
-
-  async create(dto: CreateUserDto): Promise<DocumentType<UserModel>> {
-    dto.password = await this.authService.hashPassword(dto.password)
-    return this.userModel.create(dto)
-  }
-
-  async update(id: string | Types.ObjectId, dto: CreateUserDto): Promise<DocumentType<UserModel>> {
-    const user = await this.findById(id)
-    if(!user) {
-      throw new NotFoundException();
+  async findUser( condition: any): Promise<User> {
+    const found = await this.userRepo.findOne(condition);
+    if (!found) {
+       throw new NotFoundException()
     }
-    return this.userModel.findByIdAndUpdate(id, dto, { new: true, useFindAndModify: false });
+    return found;
   }
 
-  async updateRole(id: string | Types.ObjectId, role: UserRole): Promise<DocumentType<UserModel>> {
-    const user = await this.findById(id)
-    if(!user) {
-      throw new NotFoundException();
+  async exist( condition: any): Promise<boolean> {
+    const found = await this.userRepo.findOne(condition);
+    return found ? true : false;
+  }
+
+  async create(dto: CreateUserDto): Promise<User> {
+    const oldUser = await this.exist({ email: dto.email })
+    if (oldUser) {
+      throw new BadRequestException()
     }
+    dto.password = await this.authService.hashPassword(dto.password);
+    const user =  this.userRepo.create(dto);
+    await this.userRepo.save(user);
+    return user;
+  }
+
+  async update(id: number, dto: CreateUserDto): Promise<any> {
+    const user = await this.findUser(id)
+    return this.userRepo.save({
+      ...user,
+      ...dto
+    });
+  }
+
+  async updateRole(id: number, role: UserRole): Promise<User> {
+    const user = await this.findUser(id)
     user.role = role;
-    return this.userModel.findByIdAndUpdate(id, user, { new: true, useFindAndModify: false });
+    await this.userRepo.save(user)
+    return user;
   }
 
-  async delete(id: string | Types.ObjectId): Promise<DocumentType<UserModel>> {
-    const user = await this.findById(id)
-    if(!user) {
+  async delete(id: number): Promise<void> {
+    const result = await this.userRepo.delete(id);
+
+    if (result.affected === 0) {
       throw new NotFoundException();
     }
-    return this.userModel.findByIdAndRemove(id);
   }
 
-  async validateUser(dto: LoginDto): Promise<DocumentType<UserModel>> {
-    const user = await this.findByEmail(dto.email);
+  async validateUser(dto: LoginDto): Promise<User> {
+    const user = await this.userRepo.findOne({email: dto.email});
     if (!user) {
       throw new UnauthorizedException('auth error');
     }
@@ -68,12 +76,12 @@ export class UserService {
     return user;
   }
 
-  async getToken(user: UserModel) {
+  async getToken(user: User) {
     const tokens = await this.authService.generateJWT(user)
     return tokens
   }
 
-  async refresh(token:string)
+  async refresh(token: string)
   {
     const data = await this.authService.verifyToken(token)
     return this.getToken(data)

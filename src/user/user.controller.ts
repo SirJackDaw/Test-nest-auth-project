@@ -1,16 +1,15 @@
 import { ErrorWithMessage } from './../pdo/ErrorWithMessage';
-import { BadRequestException, Body, Query, Controller, Delete, Get, HttpCode, Param, Post, Put, UseGuards, Logger } from '@nestjs/common';
+import { Body, Query, Controller, Delete, Get, HttpCode, Param, Post, Put, UseGuards, Logger } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/createUserDto';
 import { UserDto } from './dto/userDto';
-import { UserModel } from './user.model';
-import { IdValidationPipe } from '../pipes/idValidation.pipe';
 import { hasRoles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from './user.roles';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { LoginDto } from './dto/loginDto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-guard';
+import { User } from './user.entity';
 
 @ApiBearerAuth()
 @Controller()
@@ -23,14 +22,13 @@ export class UserController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('api/users')
   @HttpCode(200)
-  async getUsersList(): Promise<UserModel[]> {
-    return this.userService.find();
+  getUsersList(): Promise<User[]> {
+    return this.userService.findUsers({});
   }
 
   @Post('api/login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto): Promise<any> {
-    this.logger.error('WINSTON')
     const user = await this.userService.validateUser(dto)
     return this.userService.getToken(user);
   }
@@ -43,8 +41,8 @@ export class UserController {
 
   @Get('api/users/:id')
   @HttpCode(200)
-  async getUser(@Param('id', IdValidationPipe) id: string): Promise<UserModel> {
-    return this.userService.findById(id);
+  getUser(@Param('id') id: number): Promise<User> {
+    return this.userService.findUser(id);
   }
 
   @hasRoles(UserRole.Admin, UserRole.MasterAccount)
@@ -53,11 +51,7 @@ export class UserController {
   @HttpCode(201)
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({ status: 201, description: 'Succesfully created', type: CreateUserDto })
-  async createUser(@Body() dto: CreateUserDto): Promise<UserModel> {
-    const oldUser = await this.userService.findByEmail(dto.email)
-    if (oldUser) {
-      throw new BadRequestException()
-    }
+  async createUser(@Body() dto: CreateUserDto): Promise<User> {
     return this.userService.create(dto);
   }
 
@@ -65,8 +59,7 @@ export class UserController {
   @HttpCode(200)
   @ApiResponse({status: 200, description: 'Successfully updated'})
   @ApiBody({ type: UserDto })
-  async updateUser(@Param('id', IdValidationPipe) id: string, @Body() dto: UserDto): Promise<UserModel> {
-    dto._id = id;
+  async updateUser(@Param('id') id: number, @Body() dto: UserDto): Promise<User> {
     return this.userService.update(id, dto);
   }
 
@@ -74,7 +67,7 @@ export class UserController {
   @HttpCode(200)
   @ApiResponse({status: 200, description: 'Successfully updated'})
   @ApiQuery({type: String, name: 'role'})
-  async editUserRole(@Param('id', IdValidationPipe) id: string, @Query('role') role: UserRole): Promise<UserModel> {
+  editUserRole(@Param('id') id: number, @Query('role') role: UserRole): Promise<User> {
     return this.userService.updateRole(id, role);
   }
 
@@ -82,7 +75,7 @@ export class UserController {
   @HttpCode(204)
   @ApiResponse({status: 204, description: 'Successfully deleted'})
   @ApiResponse({status: 404, description: 'Not Found.', type: ErrorWithMessage})
-  async deleteUser(@Param('id', IdValidationPipe) id: string): Promise<UserModel> {
+  deleteUser(@Param('id') id: number): Promise<void> {
     return this.userService.delete(id);
   }
 }
