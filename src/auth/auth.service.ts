@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash, compare } from 'bcryptjs';
 import { User } from 'src/user/user.entity';
@@ -11,9 +12,9 @@ export class AuthService {
 
     constructor(
         @InjectRepository(RefreshToken) private readonly refreshRepo: Repository<RefreshToken>,
-        private readonly jwtService: JwtService)
+        private readonly jwtService: JwtService,
+        private readonly configService: ConfigService)
     {}
-
 
     async generateJWT(user: User) {
         const accessToken = await this.jwtService.signAsync({user});
@@ -25,7 +26,7 @@ export class AuthService {
     }
 
     async generateRefresh(user: User): Promise<RefreshToken> {
-        const token = await this.jwtService.signAsync({user}, {expiresIn: '1h'});
+        const token = await this.jwtService.signAsync({user}, {expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRY')});
         return this.saveToken(user.id, token);
     }
 

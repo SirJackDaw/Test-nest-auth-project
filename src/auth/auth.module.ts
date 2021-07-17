@@ -17,6 +17,7 @@ import { RefreshToken } from './refreshToken/refresh.entity';
             inject: [ConfigService],
             useFactory: getJWTConfig
         }),
+        ConfigModule
     ],
     providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
     exports: [AuthService]
